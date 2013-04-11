@@ -1,0 +1,15 @@
+- attributes("title") = "S3 CORS Test"
+
+.container
+  .row
+    .span6
+      input#fileInput(type="file" accept="image/*" data-bind="value: fileInputValue, event: { change: fileInputChangeHandler }")
+    .span6
+      .progress.progress-striped.active(data-bind="visible: isProgressBarVisible")
+        #progressBar.bar(data-bind="style: { width: progressIndicatorWidth }")
+      #successAlert.alert.alert-success(data-bind="visible: isSuccessAlertVisible")
+        button.close(type="button" data-dismiss="alert") &times;
+        p Upload completed.
+      #failureAlert.alert.alert-error(data-bind="visible: isFailureAlertVisible")
+        button.close(type="button" data-dismiss="alert") &times;
+        p Upload failed.

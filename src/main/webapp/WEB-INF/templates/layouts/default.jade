@@ -1,0 +1,15 @@
+-@ val title: String
+-@ val body: String
+
+!!!
+html
+  head
+    title= title
+    script(type="text/javascript" src="js/jquery-1.9.0.min.js")
+    script(type="text/javascript" src="js/knockout-2.2.1.js")
+    script(type="text/javascript" src="js/bootstrap.min.js")
+    script(type="text/javascript" src="js/main.js")
+    link(href="css/bootstrap.min.css" rel="stylesheet" media="screen")
+    link(href="css/main.css" rel="stylesheet" media="screen")
+  body
+    != body
