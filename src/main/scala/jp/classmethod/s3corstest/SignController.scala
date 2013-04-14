@@ -17,32 +17,27 @@ class SignController extends ScalatraServlet with JacksonJsonSupport {
     contentType = formats("json")
   }
 
-  get("/get") {
-    logger info "GET /sign/get"
-
-    signUrlAction(params) {
-      val s3SignHelper = new S3GetSignHelper
-      s3SignHelper.s3ObjectUrl(_)
-    }
-  }
-
   get("/put") {
     logger info "GET /sign/put"
 
-    signUrlAction(params) {
-      val s3SignHelper = new S3PUTSignHelper
-      s3SignHelper.s3ObjectUrl(_)
-    }
-  }
-
-  private[this] def signUrlAction(params: Params)(f: S3FileInfo => String): ActionResult = {
     val fileInfo = for {
       objectName <- params.getAs[String]("name")
-    } yield S3FileInfo(targetBucketName, objectName, params.getAs[String]("type"))
+      mimeType <- params.getAs[String]("type")
+    } yield S3FileInfo(targetBucketName, objectName, Some(mimeType))
 
-    fileInfo map { f } match {
-      case Some(url: String) => Ok(Map("url" -> url))
-      case None => halt(400, "invalid params.")
+    val fileInfoEither = fileInfo match {
+      case Some(s3FileInfo: S3FileInfo) => Right(s3FileInfo)
+      case None => Left(new IllegalStateException("invalid params."))
+    }
+
+    val result = fileInfoEither.right flatMap {
+      val s3SignHelper = new S3SignHelper
+      s3SignHelper.putS3ObjectUrl(_)
+    }
+
+    result match {
+      case Right(url: String) => Ok(Map("url" -> url))
+      case Left(e: Exception) => halt(400, e.getMessage)
     }
   }
 }

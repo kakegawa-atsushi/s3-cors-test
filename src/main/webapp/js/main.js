@@ -12,23 +12,10 @@ var ViewModel = (function () {
         this.isFailureAlertVisible = ko.observable(false);
         this.fileInputValue = ko.observable("");
         this.service = new S3FileService("http://localhost:8080/");
-        this.getAndShowImage("1bd1a644.jpg");
     }
     ViewModel.prototype.fileInputChangeHandler = function (data, event) {
         var files = event.target.files;
         this.executeUpload(files[0]);
-    };
-    ViewModel.prototype.getAndShowImage = function (fileName) {
-        this.service.getFile(fileName, function (imageData) {
-            console.log("get file complete.");
-            var imageObjectURL = window.URL.createObjectURL(imageData);
-            $("#image").load(function (event) {
-                window.URL.revokeObjectURL(imageObjectURL);
-            });
-            $("#image").attr("src", imageObjectURL);
-        }, function (errorMessage) {
-            console.log("get file failed." + errorMessage);
-        });
     };
     ViewModel.prototype.executeUpload = function (file) {
         var _this = this;
@@ -66,33 +53,6 @@ var S3FileService = (function () {
     function S3FileService(hostUrl) {
         this.hostUrl = hostUrl;
     }
-    S3FileService.prototype.getFile = function (fileName, resultHandler, errorHandler) {
-        var _this = this;
-        $.ajax({
-            url: this.hostUrl + "sign/get",
-            type: "GET",
-            data: {
-                "name": fileName
-            }
-        }).then(function (data) {
-            console.log("Start get file.");
-            var deferred = $.Deferred();
-            var xhr = _this.createCORSRequest("GET", decodeURIComponent(data["url"]));
-            xhr.responseType = "blob";
-            xhr.onload = function (e) {
-                return deferred.resolve(e);
-            };
-            xhr.onerror = function (e) {
-                return deferred.reject(e);
-            };
-            xhr.send();
-            return deferred;
-        }).done(function (e) {
-            return resultHandler(e.target.response);
-        }).fail(function (jqHXR, textStatus, errorThrow) {
-            return errorHandler(errorThrow);
-        });
-    };
     S3FileService.prototype.uploadFile = function (file, resultHandler, errorHandler, progressHandler) {
         var _this = this;
         $.ajax({

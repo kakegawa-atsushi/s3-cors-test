@@ -1,30 +1,16 @@
 package jp.classmethod.s3corstest.helpers
 
-import java.io._
-import java.util.Properties
+import java.io.File
+import com.amazonaws.auth.{AWSCredentials, PropertiesCredentials}
 
-trait AWSCredentialsProvider {
+trait AWSCredentialsSupport {
   protected def credentials: AWSCredentials
 }
 
-trait AWSCredentialsPropertiesProvider extends AWSCredentialsProvider {
-  protected def credentials = AWSCredentialsPropertiesProvider.credentials
+trait AWSCredentialsPropertiesSupport extends AWSCredentialsSupport {
+  protected def credentials = AWSCredentialsPropertiesSupport.credentials
 }
 
-object AWSCredentialsPropertiesProvider {
-  import jp.classmethod.s3corstest.utils.IOUtil._
-  
-  private lazy val credentials = loadCredentials
-
-  private[this] def loadCredentials: AWSCredentials = {
-    using(new FileInputStream(new File("credentials.properties"))) { is: FileInputStream =>
-      val properties = new Properties()
-      properties.load(is)
-      val accessKey = properties.getProperty("accessKey")
-      val secretKey = properties.getProperty("secretKey")
-      AWSCredentials(accessKey, secretKey)
-    }
-  }
+object AWSCredentialsPropertiesSupport {
+  private lazy val credentials: AWSCredentials = new PropertiesCredentials(new File("credentials.properties"))
 }
-
-case class AWSCredentials(accessKey: String, secretKey: String)

@@ -25,27 +25,11 @@ class ViewModel {
         this.isFailureAlertVisible = ko.observable(false)
         this.fileInputValue = ko.observable("")
         this.service = new S3FileService("http://localhost:8080/")
-        
-        this.getAndShowImage("1bd1a644.jpg")
     }
 
     fileInputChangeHandler(data, event) {
         var files = event.target.files
         this.executeUpload(files[0])
-    }
-    
-    getAndShowImage(fileName: string) {
-        this.service.getFile(fileName, (imageData: Blob) => {
-            console.log("get file complete.")
-            var imageObjectURL = window.URL.createObjectURL(imageData)
-            $("#image").load(event => {
-                window.URL.revokeObjectURL(imageObjectURL)    
-            })
-            $("#image").attr("src", imageObjectURL)
-        },
-        errorMessage => {
-            console.log("get file failed." + errorMessage)    
-        })
     }
         
     executeUpload(file: File) {
@@ -88,30 +72,6 @@ class ViewModel {
 class S3FileService {
     
     constructor(public hostUrl: string) {
-    }
-    
-    getFile(fileName: string, 
-        resultHandler: (imageData: Blob) => void, 
-        errorHandler: (errorMessage: string) => void) {
-        $.ajax({
-            url: this.hostUrl + "sign/get",
-            type: "GET",
-            data: { "name": fileName }
-        })
-        .then(data => {  
-            console.log("Start get file.")
-            
-            var deferred = $.Deferred()
-            var xhr = this.createCORSRequest("GET", decodeURIComponent(data["url"]))
-            xhr.responseType = "blob"
-            xhr.onload = e => deferred.resolve(e)
-            xhr.onerror = e => deferred.reject(e)
-            xhr.send()
-            
-            return deferred
-        })
-        .done(e => resultHandler(e.target.response)) 
-        .fail((jqHXR, textStatus, errorThrow) => errorHandler(errorThrow))
     }
         
     uploadFile(file: File, resultHandler: () => void, 
