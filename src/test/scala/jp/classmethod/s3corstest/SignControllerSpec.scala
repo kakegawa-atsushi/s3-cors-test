@@ -5,28 +5,45 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 class SignControllerSpec extends ScalatraSpec { def is =
-  "GET / on SignController"                     ^
-    "should return status 400"                  ! root^
-    "should return status 400"                  ! rootWithName^
-    "should return status 400"                  ! rootWithType^
-    "should return status 200 and return url"   ! rootWithNameAndType^
+  "GET /get on SignController"                  ^
+    "should return status 400"                  ! getWithoutName^
+    "should return status 200 and return url"   ! getWithName^
+  "GET /put on SignController"                  ^
+    "should return status 400"                  ! put^
+    "should return status 400"                  ! putWithName^
+    "should return status 400"                  ! putWithType^
+    "should return status 200 and return url"   ! putWithNameAndType^
                                                 end
 
   addServlet(classOf[SignController], "/*")
 
-  def root = get("/put") {
-    status must_== 400
-  }
-  
-  def rootWithName = get("/put?name=foo") {
-    status must_== 200
-  }
-  
-  def rootWithType = get("/put?type=bar") {
+  def getWithoutName = get("/get") {
     status must_== 400
   }
 
-  def rootWithNameAndType = get("/put?name=foo&type=bar") {
+  def getWithName = get("/get?name=foo") {
+    status must_== 200
+    val json = parse(body)
+    val url = for {
+      JObject(child) <- json
+      JField("url", JString(url)) <- child
+    } yield Option(url)
+    url must not be none
+  }
+
+  def put = get("/put") {
+    status must_== 400
+  }
+
+  def putWithName = get("/put?name=foo") {
+    status must_== 200
+  }
+
+  def putWithType = get("/put?type=bar") {
+    status must_== 400
+  }
+
+  def putWithNameAndType = get("/put?name=foo&type=bar") {
     status must_== 200
     val json = parse(body)
     val url = for {

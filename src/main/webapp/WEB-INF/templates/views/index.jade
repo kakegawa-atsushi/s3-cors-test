@@ -4,6 +4,7 @@
   .row
     .span6
       input#fileInput(type="file" accept="image/*" data-bind="value: fileInputValue, event: { change: fileInputChangeHandler }")
+      img#image
     .span6
       .progress.progress-striped.active(data-bind="visible: isProgressBarVisible")
         #progressBar.bar(data-bind="style: { width: progressIndicatorWidth }")

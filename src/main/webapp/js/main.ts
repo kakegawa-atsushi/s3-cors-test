@@ -16,7 +16,7 @@ class ViewModel {
     isSuccessAlertVisible: KnockoutObservableBool;
     isFailureAlertVisible: KnockoutObservableBool;
     fileInputValue: KnockoutObservableString;
-    service: UploadService; 
+    service: S3FileService; 
 
     constructor() {
         this.progressIndicatorWidth = ko.observable("0")
@@ -24,16 +24,32 @@ class ViewModel {
         this.isSuccessAlertVisible = ko.observable(false)
         this.isFailureAlertVisible = ko.observable(false)
         this.fileInputValue = ko.observable("")
-        this.service = new UploadService("http://localhost:8080/")
+        this.service = new S3FileService("http://localhost:8080/")
+        
+        this.getAndShowImage("1bd1a644.jpg")
     }
 
     fileInputChangeHandler(data, event) {
         var files = event.target.files
         this.executeUpload(files[0])
     }
+    
+    getAndShowImage(fileName: string) {
+        this.service.getFile(fileName, (imageData: Blob) => {
+            console.log("get file complete.")
+            var imageObjectURL = window.URL.createObjectURL(imageData)
+            $("#image").load(event => {
+                window.URL.revokeObjectURL(imageObjectURL)    
+            })
+            $("#image").attr("src", imageObjectURL)
+        },
+        errorMessage => {
+            console.log("get file failed." + errorMessage)    
+        })
+    }
         
     executeUpload(file: File) {
-        this.service.upload(file, () => {
+        this.service.uploadFile(file, () => {
             console.log("upload complete.")
             this.isProgressBarVisible(false)
             this.isSuccessAlertVisible(true)
@@ -69,12 +85,36 @@ class ViewModel {
     }
 }
 
-class UploadService {
+class S3FileService {
     
     constructor(public hostUrl: string) {
     }
+    
+    getFile(fileName: string, 
+        resultHandler: (imageData: Blob) => void, 
+        errorHandler: (errorMessage: string) => void) {
+        $.ajax({
+            url: this.hostUrl + "sign/get",
+            type: "GET",
+            data: { "name": fileName }
+        })
+        .then(data => {  
+            console.log("Start get file.")
+            
+            var deferred = $.Deferred()
+            var xhr = this.createCORSRequest("GET", decodeURIComponent(data["url"]))
+            xhr.responseType = "blob"
+            xhr.onload = e => deferred.resolve(e)
+            xhr.onerror = e => deferred.reject(e)
+            xhr.send()
+            
+            return deferred
+        })
+        .done(e => resultHandler(e.target.response)) 
+        .fail((jqHXR, textStatus, errorThrow) => errorHandler(errorThrow))
+    }
         
-    upload(file: File, resultHandler: () => void, 
+    uploadFile(file: File, resultHandler: () => void, 
         errorHandler: (errorMessage: string) => void,
         progressHandler: (progress: number) => void) {
         $.ajax({
@@ -117,4 +157,13 @@ class UploadService {
         }
         return xhr;
     }
+}
+
+interface Window {
+    URL: WindowURL;
+}
+
+interface WindowURL {
+    createObjectURL(file: Blob);
+    revokeObjectURL(objectURL: string);
 }

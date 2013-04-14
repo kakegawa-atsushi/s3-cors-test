@@ -5,7 +5,12 @@ import javax.crypto._
 import javax.crypto.spec.SecretKeySpec
 import java.net.URLEncoder
 import sun.misc.BASE64Encoder
-import org.scalatra.{Put, HttpMethod}
+import org.scalatra.{Get, Put, HttpMethod}
+
+class S3GetSignHelper
+  extends S3URLProvider
+  with GETMethodProvider
+  with AWSCredentialsPropertiesProvider
 
 class S3PUTSignHelper
   extends S3URLProvider
@@ -50,6 +55,10 @@ trait S3URLProvider { self: HttpMethodProvider with AWSCredentialsProvider =>
 
 trait HttpMethodProvider {
   protected def httpMethod: HttpMethod
+}
+
+trait GETMethodProvider extends HttpMethodProvider {
+  protected val httpMethod = Get
 }
 
 trait PUTMethodProvider extends HttpMethodProvider {
